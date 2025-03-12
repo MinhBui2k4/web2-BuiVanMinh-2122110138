@@ -16,7 +16,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 
 @RequestMapping("/api/v1")
 public class HelloControll {
-    @RequestMapping("/")
+    @RequestMapping("")
     String home() {
         System.out.println("Hello");
         return "Hello World!";
