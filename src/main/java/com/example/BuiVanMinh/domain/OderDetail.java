@@ -1,6 +1,5 @@
 package com.example.BuiVanMinh.domain;
 
-
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -18,7 +17,7 @@ public class OderDetail {
 
     private long quantity;
     private double price;
-    // order_i : long
+    // order_id : long
     // many order_detail => one - order
     @ManyToOne
     @JoinColumn(name = "order_id")

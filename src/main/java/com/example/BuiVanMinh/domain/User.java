@@ -2,6 +2,7 @@ package com.example.BuiVanMinh.domain;
 
 import java.util.List;
 
+import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -27,55 +28,22 @@ public class User {
     @NotNull
     @Email(message = "Email không hợp lệ", regexp = "^[a-zA-Z0-9_!#$%&'*+/=?`{|}~^.-]+@[a-zA-Z0-9.-]+$")
     @NotEmpty(message = "Email không được để trống")
+    @Column(unique = true, nullable = false)
     private String email;
 
     @NotNull
-    @Size(min = 2, max = 255, message = "Tên phải tối thiểu 2 ký tự")
+    @Size(min = 6, max = 255, message = "Mật khẩu phải tối thiểu 6 ký tự")
+    @Column(nullable = false)
     private String password;
 
     @NotNull
-    @Size(min = 3, max = 255, message = "Tên phải tối thiểu 2 ký tự")
+    @Size(min = 3, max = 255, message = "Tên phải tối thiểu 3 ký tự")
+    @Column(nullable = false)
     private String fullName;
+
     private String address;
-    private String phone;
-    private String avatar;
-
-    // role id
-    // Many User -> to One -> role
-    @ManyToOne
-    @JoinColumn(name = "role_id")
-    private Role role;
-
-    @OneToMany(mappedBy = "user")
-
-    private List<Order> order;
-
-    public Role getRole() {
-        return role;
-    }
-
-    public void setRole(Role role) {
-        this.role = role;
-    }
-
-    public List<Order> getOrder() {
-        return order;
-    }
-
-    public void setOrder(List<Order> order) {
-        this.order = order;
-    }
-
     public long getId() {
         return id;
-    }
-
-    public String getAvatar() {
-        return avatar;
-    }
-
-    public void setAvatar(String avatar) {
-        this.avatar = avatar;
     }
 
     public void setId(long id) {
@@ -122,9 +90,45 @@ public class User {
         this.phone = phone;
     }
 
+    public String getAvatar() {
+        return avatar;
+    }
+
+    public void setAvatar(String avatar) {
+        this.avatar = avatar;
+    }
+
+    public Role getRole() {
+        return role;
+    }
+
+    public void setRole(Role role) {
+        this.role = role;
+    }
+
+    public List<Order> getOrder() {
+        return order;
+    }
+
+    public void setOrder(List<Order> order) {
+        this.order = order;
+    }
+
+    private String phone;
+    private String avatar;
+
+    @ManyToOne
+    @JoinColumn(name = "role_id", nullable = false)
+    private Role role;
+
+    @OneToMany(mappedBy = "user")
+    private List<Order> order;
     @Override
     public String toString() {
         return "User [id=" + id + ", email=" + email + ", password=" + password + ", fullName=" + fullName
-                + ", address=" + address + ", phone=" + phone + ", avatar=" + avatar + "]";
+                + ", address=" + address + ", phone=" + phone + ", avatar=" + avatar + ", role=" + role + ", order="
+                + order + "]";
     }
+
+    
 }
