@@ -1,32 +1,49 @@
 package com.example.BuiVanMinh.controller;
 
-import java.util.List;
-
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
-import org.springframework.validation.annotation.Validated;
-import org.springframework.web.bind.annotation.DeleteMapping;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PutMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
-
 import com.example.BuiVanMinh.domain.User;
 import com.example.BuiVanMinh.service.UserService;
+import com.example.BuiVanMinh.util.JwtUtil;
+
+import java.util.List;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.userdetails.UserDetailsService;
+import org.springframework.web.bind.annotation.*;
 
 import jakarta.validation.Valid;
-import lombok.AllArgsConstructor;
 
 @RestController
-@AllArgsConstructor
-@RequestMapping("api/users")
-@Validated
+@RequestMapping("/api/auth")
 public class UserController {
+
+    @Autowired
     private UserService userService;
 
+    @Autowired
+    private JwtUtil jwtUtil;
+
+    @Autowired
+    private UserDetailsService userDetailsService;
+
+    // Đăng nhập và tạo token
+    @PostMapping("/login")
+    public ResponseEntity<String> login(@RequestBody LoginRequest loginRequest) {
+        // Kiểm tra thông tin đăng nhập (giả sử bạn có phương thức kiểm tra trong
+        // UserService)
+        User user = userService.validateUser(loginRequest.getUsername(), loginRequest.getPassword());
+        if (user != null) {
+            final UserDetails userDetails = userDetailsService.loadUserByUsername(loginRequest.getUsername());
+            final String token = jwtUtil.generateToken(userDetails.getUsername());
+            return new ResponseEntity<>(token, HttpStatus.OK);
+        } else {
+            return new ResponseEntity<>("Invalid credentials", HttpStatus.UNAUTHORIZED);
+        }
+    }
+
+    // Các endpoint hiện có của bạn
     @PostMapping
     public ResponseEntity<User> createUser(@Valid @RequestBody User user) {
         user.setPassword(user.getPassword());
@@ -34,7 +51,7 @@ public class UserController {
         return new ResponseEntity<>(savedUser, HttpStatus.CREATED);
     }
 
-    @GetMapping("{id}")
+    @GetMapping("/{id}")
     public ResponseEntity<User> getUserById(@PathVariable("id") Long userId) {
         User user = userService.getUserById(userId);
         return new ResponseEntity<>(user, HttpStatus.OK);
@@ -46,16 +63,38 @@ public class UserController {
         return new ResponseEntity<>(users, HttpStatus.OK);
     }
 
-    @PutMapping("{id}")
+    @PutMapping("/{id}")
     public ResponseEntity<User> updateUser(@PathVariable("id") Long userId, @Valid @RequestBody User user) {
         user.setId(userId);
         User updatedUser = userService.updateUser(user);
         return new ResponseEntity<>(updatedUser, HttpStatus.OK);
     }
 
-    @DeleteMapping("{id}")
+    @DeleteMapping("/{id}")
     public ResponseEntity<String> deleteUser(@PathVariable("id") Long userId) {
         userService.deleteUser(userId);
         return new ResponseEntity<>("User successfully deleted!", HttpStatus.OK);
+    }
+}
+
+// Class phụ để nhận thông tin đăng nhập
+class LoginRequest {
+    private String username;
+    private String password;
+
+    public String getUsername() {
+        return username;
+    }
+
+    public void setUsername(String username) {
+        this.username = username;
+    }
+
+    public String getPassword() {
+        return password;
+    }
+
+    public void setPassword(String password) {
+        this.password = password;
     }
 }

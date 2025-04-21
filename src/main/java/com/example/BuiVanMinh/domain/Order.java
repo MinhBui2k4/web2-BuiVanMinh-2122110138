@@ -1,56 +1,40 @@
 package com.example.BuiVanMinh.domain;
 
-
-import java.util.List;
-
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.ManyToOne;
-import jakarta.persistence.OneToMany;
-import jakarta.persistence.Table;
+import jakarta.persistence.*;
+import jakarta.validation.constraints.Email;
+import jakarta.validation.constraints.NotEmpty;
+import lombok.*;
 
 @Entity
-@Table(name = "oders")
+@Table(name = "orders")
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
+@ToString
 public class Order {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
 
-    private long id;
+    @Column(nullable = false)
+    @NotEmpty(message = "Name is required")
+    private String name;
 
-    private double totalPrice;
+    @Column(nullable = false)
+    @NotEmpty(message = "Email is required")
+    @Email(message = "Email should be valid")
+    private String email;
+
+    @Column(nullable = false)
+    @NotEmpty(message = "Phone is required")
+    private String phone;
+
+    @Column(nullable = false)
+    @NotEmpty(message = "Address is required")
+    private String address;
 
     @ManyToOne
     @JoinColumn(name = "user_id")
     private User user;
-
-    // bảng order và order_detail
-    // one - order -> many - order_detail
-
-    @OneToMany(mappedBy = "order")
-    List<OderDetail> orderDetail;
-
-    public long getId() {
-        return id;
-    }
-
-    public void setId(long id) {
-        this.id = id;
-    }
-
-    public double getTotalPrice() {
-        return totalPrice;
-    }
-
-    public void setTotalPrice(double totalPrice) {
-        this.totalPrice = totalPrice;
-    }
-
-    @Override
-    public String toString() {
-        return "Oder [id=" + id + ", totalPrice=" + totalPrice + "]";
-    }
-
 }
