@@ -1,7 +1,6 @@
 package com.example.BuiVanMinh.domain;
 
 import jakarta.persistence.*;
-import jakarta.validation.constraints.Min;
 import lombok.*;
 
 @Entity
@@ -10,12 +9,11 @@ import lombok.*;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-@ToString
 public class OrderDetail {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    private int id;
 
     @ManyToOne
     @JoinColumn(name = "order_id", nullable = false)
@@ -26,10 +24,8 @@ public class OrderDetail {
     private Product product;
 
     @Column(nullable = false)
-    @Min(value = 0, message = "Quantity must be non-negative")
     private int quantity;
 
     @Column(nullable = false)
-    @Min(value = 0, message = "Price must be non-negative")
     private float price;
 }

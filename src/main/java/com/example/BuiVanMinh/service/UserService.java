@@ -1,45 +1,21 @@
 package com.example.BuiVanMinh.service;
 
-import com.example.BuiVanMinh.domain.User;
-import com.example.BuiVanMinh.repository.UserRepository;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
-
 import java.util.List;
+import java.util.Optional;
 
-@Service
-public class UserService {
+import com.example.BuiVanMinh.domain.User;
 
-    @Autowired
-    private UserRepository userRepository;
+public interface UserService {
+    Optional<User> getUserByEmail(String email);
 
-    public User createUser(User user) {
-        return userRepository.save(user);
-    }
+    Optional<User> getUserById(Long id);
 
-    public User getUserById(Long userId) {
-        return userRepository.findById(userId)
-                .orElseThrow(() -> new RuntimeException("User not found with id " + userId));
-    }
+    List<User> getAllUsers();
 
-    public List<User> getAllUsers() {
-        return userRepository.findAll();
-    }
+    User createUser(User user);
 
-    public User updateUser(User user) {
-        return userRepository.save(user);
-    }
+    User updateUser(Long id, User user);
 
-    public void deleteUser(Long userId) {
-        userRepository.deleteById(userId);
-    }
+    void deleteUser(Long id);
 
-    // Thêm phương thức xác thực người dùng
-    public User validateUser(String username, String password) {
-        User user = userRepository.findByUsername(username);
-        if (user != null && user.getPassword().equals(password)) { // Nên mã hóa mật khẩu trong thực tế
-            return user;
-        }
-        return null;
-    }
 }

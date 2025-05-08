@@ -1,32 +1,32 @@
 package com.example.BuiVanMinh.domain;
 
-import jakarta.persistence.*;
-import jakarta.validation.constraints.Email;
-import jakarta.validation.constraints.NotEmpty;
-import lombok.*;
-
-import java.util.List;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.Table;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 @Entity
-@Table(name = "users")
+@Table(name = "users") // Tên bảng trong CSDL
 @Getter
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-@ToString
 public class User {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @GeneratedValue(strategy = GenerationType.IDENTITY) // Tự động tăng
     private Long id;
 
-    @Column(nullable = false, length = 100)
-    @NotEmpty(message = "Name is required")
+    @Column(nullable = false, length = 100) 
     private String name;
 
     @Column(unique = true, nullable = false, length = 100)
-    @NotEmpty(message = "Email is required")
-    @Email(message = "Email should be valid")
     private String email;
 
     @Column(length = 20)
@@ -36,16 +36,8 @@ public class User {
     private String address;
 
     @Column(nullable = false)
-    @NotEmpty(message = "Password is required")
     private String password;
 
-    @ManyToOne
-    @JoinColumn(name = "role_id")
-    private Role role;
+    private String role; 
 
-    @OneToMany(mappedBy = "user")
-    private List<Order> order;
-
-    @OneToOne(mappedBy = "user")
-    private Cart cart;
 }

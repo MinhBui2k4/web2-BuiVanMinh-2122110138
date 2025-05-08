@@ -1,100 +1,112 @@
 package com.example.BuiVanMinh.controller;
 
-import com.example.BuiVanMinh.domain.User;
-import com.example.BuiVanMinh.service.UserService;
-import com.example.BuiVanMinh.util.JwtUtil;
-
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.security.core.userdetails.UserDetailsService;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 
-import jakarta.validation.Valid;
+import com.example.BuiVanMinh.domain.User;
+import com.example.BuiVanMinh.Jwt.JwtUtil;
+import com.example.BuiVanMinh.dto.Login;
+import com.example.BuiVanMinh.service.UserService;
 
 @RestController
-@RequestMapping("/api/auth")
+@RequestMapping("/api/users")
+@CrossOrigin(origins = "*") // Cho phép frontend gọi API
 public class UserController {
 
-    @Autowired
-    private UserService userService;
+    private final UserService userService;
+    private final JwtUtil jwtUtil;
+    private final PasswordEncoder passwordEncoder;
+
+    // Lưu tạm token đăng ký để xác minh khi login
+    private final Map<String, String> registrationTokens = new HashMap<>();
 
     @Autowired
-    private JwtUtil jwtUtil;
+    public UserController(UserService userService, JwtUtil jwtUtil, PasswordEncoder passwordEncoder) {
+        this.userService = userService;
+        this.jwtUtil = jwtUtil;
+        this.passwordEncoder = passwordEncoder;
+    }
 
-    @Autowired
-    private UserDetailsService userDetailsService;
-
-    // Đăng nhập và tạo token
-    @PostMapping("/login")
-    public ResponseEntity<String> login(@RequestBody LoginRequest loginRequest) {
-        // Kiểm tra thông tin đăng nhập (giả sử bạn có phương thức kiểm tra trong
-        // UserService)
-        User user = userService.validateUser(loginRequest.getUsername(), loginRequest.getPassword());
-        if (user != null) {
-            final UserDetails userDetails = userDetailsService.loadUserByUsername(loginRequest.getUsername());
-            final String token = jwtUtil.generateToken(userDetails.getUsername());
-            return new ResponseEntity<>(token, HttpStatus.OK);
-        } else {
-            return new ResponseEntity<>("Invalid credentials", HttpStatus.UNAUTHORIZED);
+    @PostMapping("/register")
+    public ResponseEntity<Map<String, String>> registerUser(@RequestBody User user) {
+        if (user.getRole() == null || user.getRole().isEmpty()) {
+            user.setRole("USER");
         }
-    }
 
-    // Các endpoint hiện có của bạn
-    @PostMapping
-    public ResponseEntity<User> createUser(@Valid @RequestBody User user) {
-        user.setPassword(user.getPassword());
+        user.setPassword(passwordEncoder.encode(user.getPassword())); // Mã hóa mật khẩu
         User savedUser = userService.createUser(user);
-        return new ResponseEntity<>(savedUser, HttpStatus.CREATED);
+        String token = jwtUtil.generateToken(savedUser.getEmail());
+
+        Map<String, String> response = new HashMap<>();
+        response.put("message", "Đăng ký thành công");
+        response.put("email", savedUser.getEmail());
+        return ResponseEntity.ok(response);
     }
 
-    @GetMapping("/{id}")
-    public ResponseEntity<User> getUserById(@PathVariable("id") Long userId) {
-        User user = userService.getUserById(userId);
-        return new ResponseEntity<>(user, HttpStatus.OK);
+    @PostMapping("/login")
+    public ResponseEntity<?> loginUser(@RequestBody Login loginRequest) {
+        Optional<User> userOptional = userService.getUserByEmail(loginRequest.getEmail());
+
+        if (userOptional.isPresent()) {
+            User user = userOptional.get();
+            if (passwordEncoder.matches(loginRequest.getPassword(), user.getPassword())) {
+                String newToken = jwtUtil.generateToken(user.getEmail());
+
+                Map<String, String> response = new HashMap<>();
+                response.put("message", "Đăng nhập thành công");
+                response.put("token", newToken);
+                response.put("email", user.getEmail());
+                response.put("role", user.getRole());
+                response.put("userId", String.valueOf(user.getId()));
+
+                return ResponseEntity.ok(response);
+            }
+        }
+
+        return ResponseEntity.status(401).body(Map.of("message", "Email hoặc mật khẩu không đúng"));
     }
 
+    // GET tất cả người dùng
     @GetMapping
     public ResponseEntity<List<User>> getAllUsers() {
-        List<User> users = userService.getAllUsers();
-        return new ResponseEntity<>(users, HttpStatus.OK);
+        List<User> users = userService.getAllUsers(); // Lấy tất cả người dùng từ service
+        return ResponseEntity.ok(users); // Trả về danh sách người dùng
     }
 
+    // GET thông tin người dùng theo ID
+    @GetMapping("/{id}")
+    public ResponseEntity<User> getUserById(@PathVariable Long id) {
+        Optional<User> user = userService.getUserById(id); // Tìm người dùng theo ID
+        return user.map(ResponseEntity::ok)
+                .orElseGet(() -> ResponseEntity.notFound().build()); // Trả về 404 nếu không tìm thấy
+    }
+
+    // PUT cập nhật thông tin người dùng
     @PutMapping("/{id}")
-    public ResponseEntity<User> updateUser(@PathVariable("id") Long userId, @Valid @RequestBody User user) {
-        user.setId(userId);
-        User updatedUser = userService.updateUser(user);
-        return new ResponseEntity<>(updatedUser, HttpStatus.OK);
+    public ResponseEntity<User> updateUser(@PathVariable Long id, @RequestBody User userDetails) {
+        return userService.getUserById(id).map(existingUser -> {
+            existingUser.setName(userDetails.getName());
+            existingUser.setEmail(userDetails.getEmail());
+            existingUser.setPhone(userDetails.getPhone());
+            User updatedUser = userService.updateUser(id, existingUser);
+            return ResponseEntity.ok(updatedUser);
+        }).orElseGet(() -> ResponseEntity.notFound().build());
     }
 
+    // DELETE xóa người dùng
     @DeleteMapping("/{id}")
-    public ResponseEntity<String> deleteUser(@PathVariable("id") Long userId) {
-        userService.deleteUser(userId);
-        return new ResponseEntity<>("User successfully deleted!", HttpStatus.OK);
-    }
-}
-
-// Class phụ để nhận thông tin đăng nhập
-class LoginRequest {
-    private String username;
-    private String password;
-
-    public String getUsername() {
-        return username;
-    }
-
-    public void setUsername(String username) {
-        this.username = username;
-    }
-
-    public String getPassword() {
-        return password;
-    }
-
-    public void setPassword(String password) {
-        this.password = password;
+    public ResponseEntity<Void> deleteUser(@PathVariable Long id) {
+        if (!userService.getUserById(id).isPresent()) {
+            return ResponseEntity.notFound().build();
+        }
+        userService.deleteUser(id);
+        return ResponseEntity.noContent().build();
     }
 }

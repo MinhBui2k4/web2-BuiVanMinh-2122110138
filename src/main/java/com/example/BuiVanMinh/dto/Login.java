@@ -4,7 +4,9 @@ import lombok.*;
 
 @Getter
 @Setter
-public class Login {
+@NoArgsConstructor
+@AllArgsConstructor
+public class Login{
     private String email;
     private String password;
 }

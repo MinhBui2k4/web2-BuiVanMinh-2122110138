@@ -1,12 +1,12 @@
 package com.example.BuiVanMinh.domain;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
+
 import jakarta.persistence.*;
-import jakarta.validation.constraints.Min;
-import jakarta.validation.constraints.NotEmpty;
 import lombok.*;
 
 @Entity
-@Table(name = "products")
+@Table(name = "product")
 @Getter
 @Setter
 @NoArgsConstructor
@@ -16,31 +16,29 @@ public class Product {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    private Long id;  // Changed to Long type to match the repository
 
     @Column(nullable = false, length = 255)
-    @NotEmpty(message = "Product name is required")
     private String name;
 
     @Column(length = 500)
     private String image;
 
-    @ManyToOne
-    @JoinColumn(name = "category_id")
-    private Category category;
+    @Column(columnDefinition = "TEXT")
+    private String description;
+
+    @Column(nullable = false)
+    private Double price;
 
     @ManyToOne
     @JoinColumn(name = "brand_id")
     private Brand brand;
 
-    @Column(columnDefinition = "TEXT")
-    private String description;
+    @ManyToOne
+    @JoinColumn(name = "category_id")
+    private Category category;
 
     @Column(nullable = false)
-    @Min(value = 0, message = "Price must be non-negative")
-    private float price;
+    private int quantity;
 
-    @Column(name = "quantity", nullable = false)
-    @Min(value = 0, message = "Quantity must be non-negative")
-    private Integer quantity;
 }
